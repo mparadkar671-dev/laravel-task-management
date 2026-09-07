@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\TaskController; // <--- THIS WAS MISSING
 
 /*
 |--------------------------------------------------------------------------
@@ -18,12 +19,13 @@ Route::prefix('v1')->group(function () {
     // Protected Routes (Require a valid Sanctum Token)
     Route::middleware('auth:sanctum')->group(function () {
         
-        // This is a test route to check if the token works
+        // Task CRUD Routes
+        Route::apiResource('tasks', TaskController::class);
+        
+        // Test route to check if the token works
         Route::get('/user', function (Request $request) {
             return $request->user();
         });
-
-        // We will add Task CRUD routes here in Phase 8
     });
 
 });

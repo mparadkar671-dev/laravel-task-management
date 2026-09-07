@@ -29,4 +29,21 @@ class TaskService
 
         return $this->taskRepository->getAllForUser($user->id, $role);
     }
+    public function findById($id)
+    {
+        return $this->taskRepository->findById($id);
+    }
+
+    public function updateTask($id, array $data)
+    {
+        $task = $this->taskRepository->findById($id);
+        $task->update($data);
+        return $task;
+    }
+
+    public function deleteTask($id)
+    {
+        $task = $this->taskRepository->findById($id);
+        return $task->delete();
+    }
 }
