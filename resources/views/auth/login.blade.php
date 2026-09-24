@@ -84,7 +84,7 @@
         .auth-subtitle {
             color: var(--text-muted);
             font-size: 0.9rem;
-            margin-bottom: 1.75rem;
+            margin-bottom: 1.5rem;
         }
 
         .form-group {
@@ -144,55 +144,6 @@
             box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
         }
 
-        /* 1-Click Persona Quick Logins */
-        .quick-persona-section {
-            margin-top: 2rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid var(--border);
-        }
-
-        .quick-persona-title {
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            color: var(--text-dim);
-            letter-spacing: 0.05em;
-            margin-bottom: 0.75rem;
-            text-align: center;
-        }
-
-        .persona-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 0.5rem;
-        }
-
-        .persona-btn {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 0.6rem 0.4rem;
-            border-radius: var(--radius-md);
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.2s ease;
-        }
-
-        .persona-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(99, 102, 241, 0.4);
-            transform: translateY(-2px);
-        }
-
-        .persona-role {
-            display: block;
-            font-size: 0.65rem;
-            color: var(--text-dim);
-            margin-top: 0.2rem;
-        }
-
         .auth-footer {
             margin-top: 1.5rem;
             text-align: center;
@@ -219,6 +170,17 @@
             font-size: 0.85rem;
             margin-bottom: 1.25rem;
         }
+
+        .setup-notice {
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #d8b4fe;
+            padding: 0.85rem 1.1rem;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -229,12 +191,27 @@
             <span class="brand-title">TaskFlow Enterprise</span>
         </a>
 
-        <h1>Welcome Back</h1>
-        <p class="auth-subtitle">Sign in to your role-specific dashboard</p>
+        <h1>Sign In</h1>
+        <p class="auth-subtitle">Access your role-specific task workspace</p>
+
+        @if(!$adminExists)
+            <div class="setup-notice">
+                👑 <strong>Platform Not Initialized:</strong> No Administrator account exists yet. 
+                <a href="{{ route('register') }}" style="color: #fff; font-weight: 700; text-decoration: underline; display: block; margin-top: 0.35rem;">
+                    Click here to register the single Administrator ➔
+                </a>
+            </div>
+        @endif
 
         @if($errors->any())
             <div class="alert-error">
                 {{ $errors->first() }}
+            </div>
+        @endif
+
+        @if(session('status'))
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.85rem; margin-bottom: 1.25rem;">
+                {{ session('status') }}
             </div>
         @endif
 
@@ -252,42 +229,16 @@
 
             <div class="checkbox-group">
                 <input type="checkbox" id="remember" name="remember">
-                <label for="remember">Remember this device for 30 days</label>
+                <label for="remember">Keep me signed in on this device</label>
             </div>
 
-            <button type="submit" class="btn-submit">Sign In to Workspace</button>
+            <button type="submit" class="btn-submit">Sign In to Dashboard</button>
         </form>
 
-        <!-- 1-Click Quick Persona Autofill & Login -->
-        <div class="quick-persona-section">
-            <div class="quick-persona-title">Or 1-Click Fast Login As</div>
-            <div class="persona-grid">
-                <button type="button" class="persona-btn" onclick="quickFill('admin@example.com', 'password')">
-                    👑 Admin
-                    <span class="persona-role">Full Governance</span>
-                </button>
-                <button type="button" class="persona-btn" onclick="quickFill('manager@example.com', 'password')">
-                    💼 Manager
-                    <span class="persona-role">Team Delegation</span>
-                </button>
-                <button type="button" class="persona-btn" onclick="quickFill('employee1@example.com', 'password')">
-                    🧑‍💻 Employee
-                    <span class="persona-role">Assigned Tasks</span>
-                </button>
-            </div>
-        </div>
-
         <div class="auth-footer">
-            Don't have an account? <a href="{{ route('register') }}">Create an account</a>
+            Need an account? <a href="{{ route('register') }}">{{ !$adminExists ? 'Initialize Admin Account' : 'Register as Employee' }}</a>
         </div>
     </div>
 
-    <script>
-        function quickFill(email, password) {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = password;
-            document.getElementById('login-form').submit();
-        }
-    </script>
 </body>
 </html>

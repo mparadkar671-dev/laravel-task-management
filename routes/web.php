@@ -53,6 +53,9 @@ Route::middleware('auth')->group(function () {
         Route::put('/tasks/{task}', [AdminController::class, 'updateTask'])->name('tasks.update');
         Route::delete('/tasks/{task}', [AdminController::class, 'deleteTask'])->name('tasks.destroy');
         Route::get('/users', [AdminController::class, 'users'])->name('users');
+        Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+        Route::post('/users/{user}/role', [AdminController::class, 'updateUserRole'])->name('users.updateRole');
+        Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->name('users.destroy');
     });
 
     // -------------------------------------------------------------

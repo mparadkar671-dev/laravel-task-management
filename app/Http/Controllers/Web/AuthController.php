@@ -22,7 +22,9 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole(Auth::user());
         }
 
-        return view('auth.login');
+        $adminExists = User::role('admin')->exists();
+
+        return view('auth.login', compact('adminExists'));
     }
 
     /**
@@ -54,6 +56,7 @@ class AuthController extends Controller
 
     /**
      * Show registration form.
+     * Detects if an Admin exists to configure single-admin setup vs employee registration.
      */
     public function showRegister(): View|RedirectResponse
     {
@@ -61,19 +64,23 @@ class AuthController extends Controller
             return $this->redirectBasedOnRole(Auth::user());
         }
 
-        return view('auth.register');
+        $adminExists = User::role('admin')->exists();
+
+        return view('auth.register', compact('adminExists'));
     }
 
     /**
-     * Handle new user registration.
+     * Handle user registration.
+     * Enforces single Admin: First registered user becomes Admin; all subsequent are Employees.
      */
     public function register(Request $request): RedirectResponse
     {
+        $adminExists = User::role('admin')->exists();
+
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'confirmed', Password::defaults()],
-            'role' => ['required', 'string', 'in:employee,manager'],
         ]);
 
         $user = User::create([
@@ -82,14 +89,21 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
         ]);
 
-        // Assign selected role via Spatie
-        $user->assignRole($validated['role']);
+        if (! $adminExists) {
+            // First registered user becomes the single primary Administrator
+            $user->assignRole('admin');
+            $statusMessage = 'Platform Administrator initialized successfully! Welcome to your executive workspace.';
+        } else {
+            // All subsequent registrations default to Employee
+            // (Managers can only be created or promoted by the Administrator)
+            $user->assignRole('employee');
+            $statusMessage = 'Registration complete! Welcome to your employee task board.';
+        }
 
         Auth::login($user);
         $request->session()->regenerate();
 
-        return $this->redirectBasedOnRole($user)
-            ->with('status', 'Registration successful! Welcome to TaskFlow.');
+        return $this->redirectBasedOnRole($user)->with('status', $statusMessage);
     }
 
     /**

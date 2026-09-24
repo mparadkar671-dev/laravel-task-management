@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Account | TaskFlow Enterprise</title>
+    <title>{{ !$adminExists ? 'Initialize Administrator' : 'Employee Registration' }} | TaskFlow Enterprise</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -16,6 +16,7 @@
             --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
             --text-main: #f9fafb;
             --text-muted: #9ca3af;
+            --text-dim: #6b7280;
             --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
             --radius-lg: 14px;
             --radius-md: 8px;
@@ -83,7 +84,28 @@
         .auth-subtitle {
             color: var(--text-muted);
             font-size: 0.9rem;
-            margin-bottom: 1.75rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.5;
+        }
+
+        .role-notice-box {
+            padding: 0.85rem 1.1rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            font-size: 0.825rem;
+            line-height: 1.5;
+        }
+
+        .notice-admin {
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            color: #d8b4fe;
+        }
+
+        .notice-employee {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #6ee7b7;
         }
 
         .form-group {
@@ -177,8 +199,19 @@
             <span class="brand-title">TaskFlow Enterprise</span>
         </a>
 
-        <h1>Create Account</h1>
-        <p class="auth-subtitle">Join the team and configure your role</p>
+        @if(!$adminExists)
+            <h1>Platform Setup</h1>
+            <p class="auth-subtitle">Initialize your workspace as the Primary Administrator.</p>
+            <div class="role-notice-box notice-admin">
+                👑 <strong>Single Administrator Rule:</strong> Since no Administrator exists, you will be registered with full platform governance and executive rights. You can appoint Managers and delegate tasks once initialized.
+            </div>
+        @else
+            <h1>Employee Registration</h1>
+            <p class="auth-subtitle">Create your account to view and manage assigned tasks.</p>
+            <div class="role-notice-box notice-employee">
+                🧑‍💻 <strong>Employee Account:</strong> You are registering as a team employee. Managers are appointed directly by the Administrator.
+            </div>
+        @endif
 
         @if($errors->any())
             <div class="alert-error">
@@ -189,36 +222,30 @@
         <form action="{{ route('register.post') }}" method="POST">
             @csrf
             <div class="form-group">
-                <label class="form-label" for="name">Full Name</label>
+                <label class="form-label" for="name">Full Name *</label>
                 <input type="text" id="name" name="name" class="form-control" value="{{ old('name') }}" required autofocus placeholder="John Doe">
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="email">Work Email</label>
-                <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" required placeholder="john@example.com">
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="role">Assign Role</label>
-                <select id="role" name="role" class="form-control" required>
-                    <option value="employee" {{ old('role') === 'employee' ? 'selected' : '' }}>🧑‍💻 Employee (Assigned Tasks Focus)</option>
-                    <option value="manager" {{ old('role') === 'manager' ? 'selected' : '' }}>💼 Manager (Team & Task Delegation)</option>
-                </select>
+                <label class="form-label" for="email">Work Email *</label>
+                <input type="email" id="email" name="email" class="form-control" value="{{ old('email') }}" required placeholder="name@company.com">
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="form-label" for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" required placeholder="Min. 8 chars">
+                    <label class="form-label" for="password">Password *</label>
+                    <input type="password" id="password" name="password" class="form-control" required placeholder="Min. 8 characters">
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" for="password_confirmation">Confirm Password</label>
+                    <label class="form-label" for="password_confirmation">Confirm Password *</label>
                     <input type="password" id="password_confirmation" name="password_confirmation" class="form-control" required placeholder="Repeat password">
                 </div>
             </div>
 
-            <button type="submit" class="btn-submit">Register & Access Workspace</button>
+            <button type="submit" class="btn-submit">
+                {{ !$adminExists ? 'Initialize Administrator & Launch' : 'Register Employee Account' }}
+            </button>
         </form>
 
         <div class="auth-footer">

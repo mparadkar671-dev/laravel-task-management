@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Services\TaskService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
 
 class AdminController extends Controller
@@ -151,5 +153,64 @@ class AdminController extends Controller
             ->get();
 
         return view('admin.users', compact('users'));
+    }
+
+    /**
+     * Admin creates a new team member (Manager or Employee).
+     */
+    public function storeUser(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', Password::defaults()],
+            'role' => ['required', 'in:manager,employee'],
+        ]);
+
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        $user->assignRole($validated['role']);
+
+        return back()->with('status', "Team member {$user->name} created with ".strtoupper($validated['role']).' role!');
+    }
+
+    /**
+     * Admin updates a user's role (Promote to Manager or Demote to Employee).
+     */
+    public function updateUserRole(Request $request, User $user): RedirectResponse
+    {
+        // Enforce Single Admin rule: Primary Administrator cannot be demoted or altered
+        if ($user->hasRole('admin')) {
+            return back()->withErrors(['role' => 'The Primary Administrator account role cannot be modified.']);
+        }
+
+        $validated = $request->validate([
+            'role' => ['required', 'in:manager,employee'],
+        ]);
+
+        $user->syncRoles($validated['role']);
+
+        $roleTitle = strtoupper($validated['role']);
+
+        return back()->with('status', "{$user->name} is now designated as {$roleTitle} with corresponding authority!");
+    }
+
+    /**
+     * Admin deletes a user.
+     */
+    public function deleteUser(User $user): RedirectResponse
+    {
+        if ($user->hasRole('admin') || $user->id === auth()->id()) {
+            return back()->withErrors(['user' => 'The Primary Administrator account cannot be deleted.']);
+        }
+
+        $userName = $user->name;
+        $user->delete();
+
+        return back()->with('status', "User {$userName} was removed from the platform.");
     }
 }
