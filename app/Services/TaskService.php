@@ -66,4 +66,15 @@ class TaskService
 
         return $task->histories()->with('user')->orderBy('changed_at', 'desc')->orderBy('id', 'desc')->get();
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getStatistics(): array
+    {
+        $user = Auth::user();
+        $role = $user ? $user->getRoleNames()->first() : null;
+
+        return $this->taskRepository->getStatisticsForUser($user->id, $role);
+    }
 }

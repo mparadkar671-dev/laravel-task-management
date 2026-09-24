@@ -1,0 +1,295 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Task Management API",
+    "version": "1.0.0",
+    "description": "Production-ready RESTful Task Management API built with Laravel 12/13, Laravel Sanctum, and Spatie Permission."
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000/api/v1",
+      "description": "Local Development Server (API v1)"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "Sanctum Token"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "name": { "type": "string", "example": "Employee One" },
+          "email": { "type": "string", "example": "employee1@example.com" }
+        }
+      },
+      "Task": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "title": { "type": "string", "example": "Initial Server Setup" },
+          "description": { "type": "string", "example": "Configure production deployment server." },
+          "priority": { "type": "string", "enum": ["low", "medium", "high"], "example": "high" },
+          "status": { "type": "string", "enum": ["pending", "in-progress", "completed"], "example": "in-progress" },
+          "due_date": { "type": "string", "format": "date", "example": "2026-09-30" },
+          "assigned_to": {
+            "$ref": "#/components/schemas/User"
+          },
+          "created_by": {
+            "$ref": "#/components/schemas/User"
+          },
+          "created_at": { "type": "string", "example": "2026-09-24 10:00:00" },
+          "updated_at": { "type": "string", "example": "2026-09-24 11:30:00" }
+        }
+      },
+      "TaskHistory": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer", "example": 1 },
+          "task_id": { "type": "integer", "example": 1 },
+          "changed_by": {
+            "$ref": "#/components/schemas/User"
+          },
+          "old_status": { "type": "string", "example": "pending" },
+          "new_status": { "type": "string", "example": "in-progress" },
+          "changed_at": { "type": "string", "format": "date-time", "example": "2026-09-24 11:30:00" }
+        }
+      },
+      "Statistics": {
+        "type": "object",
+        "properties": {
+          "total_tasks": { "type": "integer", "example": 12 },
+          "pending_tasks": { "type": "integer", "example": 4 },
+          "in_progress_tasks": { "type": "integer", "example": 5 },
+          "completed_tasks": { "type": "integer", "example": 3 },
+          "overdue_tasks": { "type": "integer", "example": 1 },
+          "priority_breakdown": {
+            "type": "object",
+            "properties": {
+              "high": { "type": "integer", "example": 4 },
+              "medium": { "type": "integer", "example": 5 },
+              "low": { "type": "integer", "example": 3 }
+            }
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/login": {
+      "post": {
+        "summary": "Authenticate user and generate Sanctum token",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email", "example": "employee1@example.com" },
+                  "password": { "type": "string", "example": "password" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Login successful" },
+          "422": { "description": "Validation error or invalid credentials" },
+          "429": { "description": "Too many login attempts (throttled at 5/min)" }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "summary": "Revoke current access token",
+        "tags": ["Authentication"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Logged out successfully" },
+          "401": { "description": "Unauthenticated" }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "summary": "Get authenticated user profile",
+        "tags": ["Authentication"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": { "description": "Authenticated user profile" },
+          "401": { "description": "Unauthenticated" }
+        }
+      }
+    },
+    "/tasks/statistics": {
+      "get": {
+        "summary": "Get task statistics and metrics",
+        "description": "Returns counts for total, pending, in-progress, completed, and overdue tasks. Scoped by user role.",
+        "tags": ["Tasks"],
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Task metrics",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Statistics" }
+                  }
+                }
+              }
+            }
+          },
+          "401": { "description": "Unauthenticated" }
+        }
+      }
+    },
+    "/tasks": {
+      "get": {
+        "summary": "List paginated tasks with filtering and sorting",
+        "description": "Employees see only their assigned tasks. Admins and Managers see all tasks.",
+        "tags": ["Tasks"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "status", "in": "query", "schema": { "type": "string", "enum": ["pending", "in-progress", "completed"] } },
+          { "name": "priority", "in": "query", "schema": { "type": "string", "enum": ["low", "medium", "high"] } },
+          { "name": "due_date", "in": "query", "schema": { "type": "string", "format": "date" } },
+          { "name": "assigned_to", "in": "query", "schema": { "type": "integer" } },
+          { "name": "search", "in": "query", "schema": { "type": "string" } },
+          { "name": "sort_by", "in": "query", "schema": { "type": "string", "enum": ["title", "priority", "status", "due_date", "created_at"] } },
+          { "name": "sort_order", "in": "query", "schema": { "type": "string", "enum": ["asc", "desc"] } },
+          { "name": "per_page", "in": "query", "schema": { "type": "integer", "default": 15 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated task list" },
+          "401": { "description": "Unauthenticated" }
+        }
+      },
+      "post": {
+        "summary": "Create a new task",
+        "description": "Allowed for Admin and Manager roles only.",
+        "tags": ["Tasks"],
+        "security": [{ "bearerAuth": [] }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "priority", "assigned_to", "due_date"],
+                "properties": {
+                  "title": { "type": "string", "example": "Implement Payment Gateway" },
+                  "description": { "type": "string", "example": "Integrate Stripe checkout API." },
+                  "priority": { "type": "string", "enum": ["low", "medium", "high"], "example": "high" },
+                  "status": { "type": "string", "enum": ["pending", "in-progress", "completed"], "example": "pending" },
+                  "assigned_to": { "type": "integer", "example": 3 },
+                  "due_date": { "type": "string", "format": "date", "example": "2026-10-15" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Task created successfully" },
+          "403": { "description": "Forbidden (Employees cannot create tasks)" },
+          "422": { "description": "Validation error" }
+        }
+      }
+    },
+    "/tasks/{task}": {
+      "get": {
+        "summary": "Retrieve details of a single task",
+        "tags": ["Tasks"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "task", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Task details" },
+          "403": { "description": "Forbidden (if not assigned to requesting employee)" },
+          "404": { "description": "Task not found" }
+        }
+      },
+      "put": {
+        "summary": "Update task details or status",
+        "description": "Admins/Managers can edit all fields. Employees can only edit 'status'.",
+        "tags": ["Tasks"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "task", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "priority": { "type": "string", "enum": ["low", "medium", "high"] },
+                  "status": { "type": "string", "enum": ["pending", "in-progress", "completed"] },
+                  "assigned_to": { "type": "integer" },
+                  "due_date": { "type": "string", "format": "date" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Task updated successfully" },
+          "403": { "description": "Forbidden" },
+          "422": { "description": "Validation error (e.g. employee attempting to update title)" }
+        }
+      },
+      "delete": {
+        "summary": "Delete a task",
+        "description": "Allowed for Admin and Manager roles only.",
+        "tags": ["Tasks"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "task", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": { "description": "Task deleted successfully" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Task not found" }
+        }
+      }
+    },
+    "/tasks/{task}/history": {
+      "get": {
+        "summary": "Get chronological status transition audit log for a task",
+        "tags": ["Tasks"],
+        "security": [{ "bearerAuth": [] }],
+        "parameters": [
+          { "name": "task", "in": "path", "required": true, "schema": { "type": "integer" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task history list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/TaskHistory" }
+                }
+              }
+            }
+          },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Task not found" }
+        }
+      }
+    }
+  }
+}

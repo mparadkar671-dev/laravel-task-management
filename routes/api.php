@@ -19,6 +19,9 @@ Route::prefix('v1')->group(function () {
     // Protected Routes (Require a valid Sanctum Token)
     Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
+        // Task Statistics Route (Must precede apiResource)
+        Route::get('/tasks/statistics', [TaskController::class, 'statistics']);
+
         // Task History Route (Must precede apiResource to ensure proper routing)
         Route::get('/tasks/{task}/history', [TaskController::class, 'history']);
 

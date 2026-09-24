@@ -83,4 +83,13 @@ class TaskController extends Controller
 
         return TaskHistoryResource::collection($histories);
     }
+
+    public function statistics(): JsonResponse
+    {
+        $stats = $this->taskService->getStatistics();
+
+        return response()->json([
+            'data' => $stats,
+        ], 200);
+    }
 }

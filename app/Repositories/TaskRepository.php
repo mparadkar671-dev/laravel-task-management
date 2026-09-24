@@ -86,4 +86,31 @@ class TaskRepository
     {
         return (bool) $task->delete();
     }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getStatisticsForUser(int|string $userId, ?string $role): array
+    {
+        $query = Task::query();
+
+        if (! in_array($role, ['admin', 'manager'], true)) {
+            $query->where('assigned_to', $userId);
+        }
+
+        $today = now()->toDateString();
+
+        return [
+            'total_tasks' => (clone $query)->count(),
+            'pending_tasks' => (clone $query)->where('status', 'pending')->count(),
+            'in_progress_tasks' => (clone $query)->where('status', 'in-progress')->count(),
+            'completed_tasks' => (clone $query)->where('status', 'completed')->count(),
+            'overdue_tasks' => (clone $query)->where('status', '!=', 'completed')->whereDate('due_date', '<', $today)->count(),
+            'priority_breakdown' => [
+                'high' => (clone $query)->where('priority', 'high')->count(),
+                'medium' => (clone $query)->where('priority', 'medium')->count(),
+                'low' => (clone $query)->where('priority', 'low')->count(),
+            ],
+        ];
+    }
 }
