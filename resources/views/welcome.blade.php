@@ -525,13 +525,9 @@
                 <span>TaskFlow API</span>
             </a>
             <div class="header-links">
-                <a href="#endpoints" class="nav-link">Endpoints</a>
-                <a href="#features" class="nav-link">Architecture</a>
-                <a href="/openapi.json" class="btn btn-outline" id="openapi-btn">OpenAPI 3.0</a>
-                <a href="/docs" class="btn btn-primary" id="swagger-ui-btn">
-                    <span>Swagger UI</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7V17"/></svg>
-                </a>
+                <a href="{{ route('login') }}" class="btn btn-outline" id="login-nav-btn">Sign In</a>
+                <a href="{{ route('register') }}" class="btn btn-primary" id="register-nav-btn">Create Account</a>
+                <a href="/docs" class="nav-link" id="swagger-ui-btn">Swagger UI</a>
             </div>
         </header>
 
@@ -539,18 +535,21 @@
         <section class="hero">
             <div class="badge-pill">
                 <span class="badge-dot"></span>
-                <span>Production API Ready • PHP 8.5 • Laravel 12</span>
+                <span>Production Ready • Multi-Page Web App & REST API</span>
             </div>
             <h1>Enterprise Task Management & Governance Platform</h1>
             <p class="hero-desc">
-                High-concurrency RESTful engine engineered with Laravel Sanctum authentication, Spatie Role-Based Access Control, automated observer status audits, daily overdue task cron notifications, and rate-limiting safeguards.
+                Role-tailored multi-page application with dedicated workspaces for Admins, Managers, and Employees. Engineered with Spatie RBAC, automated observer audit trails, daily overdue task reminders, and OpenAPI 3.0 documentation.
             </p>
             <div class="hero-actions">
-                <a href="/docs" class="btn btn-primary" id="hero-docs-btn" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
-                    Launch Interactive Swagger UI
+                <a href="{{ route('login') }}" class="btn btn-primary" id="hero-login-btn" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                    Sign In to Workspace ➔
                 </a>
-                <a href="#quick-test" class="btn btn-outline" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
-                    Test Live Authentication
+                <a href="{{ route('register') }}" class="btn btn-outline" id="hero-register-btn" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                    Register New Account
+                </a>
+                <a href="/docs" class="btn btn-outline" id="hero-docs-btn" style="padding: 0.85rem 1.75rem; font-size: 1rem;">
+                    Interactive Swagger UI
                 </a>
             </div>
         </section>

@@ -1,21 +1,76 @@
 <?php
 
+use App\Http\Controllers\Web\AdminController;
+use App\Http\Controllers\Web\AuthController;
+use App\Http\Controllers\Web\EmployeeController;
+use App\Http\Controllers\Web\ManagerController;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
+/*
+|--------------------------------------------------------------------------
+| Web Routes - Multi-Page Application
+|--------------------------------------------------------------------------
+*/
+
+// Public Landing Page & Docs
 Route::get('/', function () {
-    return view('app');
-});
+    if (Auth::check()) {
+        return (new AuthController)->redirectBasedOnRole(Auth::user());
+    }
 
-Route::get('/app', function () {
-    return view('app');
-});
-
-Route::get('/dashboard', function () {
-    return view('app');
-});
-
-Route::view('/docs', 'docs');
-
-Route::get('/landing', function () {
     return view('welcome');
+})->name('home');
+
+Route::view('/docs', 'docs')->name('docs');
+Route::view('/spa', 'app')->name('spa');
+
+// Guest Authentication Routes
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+    Route::post('/login', [AuthController::class, 'login'])->name('login.post');
+
+    Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
+    Route::post('/register', [AuthController::class, 'register'])->name('register.post');
+});
+
+// Authenticated Routes
+Route::middleware('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+    // Universal dashboard redirect
+    Route::get('/dashboard', function () {
+        return (new AuthController)->redirectBasedOnRole(Auth::user());
+    })->name('dashboard');
+
+    // -------------------------------------------------------------
+    // 1. Admin Interface & Rights (Full Governance & Oversight)
+    // -------------------------------------------------------------
+    Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/tasks', [AdminController::class, 'tasks'])->name('tasks');
+        Route::post('/tasks', [AdminController::class, 'storeTask'])->name('tasks.store');
+        Route::put('/tasks/{task}', [AdminController::class, 'updateTask'])->name('tasks.update');
+        Route::delete('/tasks/{task}', [AdminController::class, 'deleteTask'])->name('tasks.destroy');
+        Route::get('/users', [AdminController::class, 'users'])->name('users');
+    });
+
+    // -------------------------------------------------------------
+    // 2. Manager Interface & Rights (Department Delegation & Team)
+    // -------------------------------------------------------------
+    Route::middleware('role:manager')->prefix('manager')->name('manager.')->group(function () {
+        Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
+        Route::get('/tasks', [ManagerController::class, 'tasks'])->name('tasks');
+        Route::post('/tasks', [ManagerController::class, 'storeTask'])->name('tasks.store');
+        Route::put('/tasks/{task}', [ManagerController::class, 'updateTask'])->name('tasks.update');
+        Route::delete('/tasks/{task}', [ManagerController::class, 'deleteTask'])->name('tasks.destroy');
+    });
+
+    // -------------------------------------------------------------
+    // 3. Employee Interface & Rights (Personal Assigned Tasks Only)
+    // -------------------------------------------------------------
+    Route::middleware('role:employee')->prefix('employee')->name('employee.')->group(function () {
+        Route::get('/dashboard', [EmployeeController::class, 'dashboard'])->name('dashboard');
+        Route::patch('/tasks/{task}/status', [EmployeeController::class, 'updateStatus'])->name('tasks.updateStatus');
+    });
 });
