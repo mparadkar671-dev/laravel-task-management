@@ -2,18 +2,17 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Task;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreTaskRequest extends FormRequest
+class LoginRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        return $this->user()?->can('create', Task::class) ?? false;
+        return true;
     }
 
     /**
@@ -24,12 +23,8 @@ class StoreTaskRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'priority' => 'required|in:low,medium,high',
-            'status' => 'sometimes|in:pending,in-progress,completed',
-            'assigned_to' => 'required|exists:users,id',
-            'due_date' => 'required|date|after_or_equal:today',
+            'email' => 'required|email',
+            'password' => 'required|string',
         ];
     }
 }

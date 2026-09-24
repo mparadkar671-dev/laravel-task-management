@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Observers\TaskObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+#[ObservedBy([TaskObserver::class])]
 class Task extends Model
 {
     use HasFactory;
@@ -20,6 +23,18 @@ class Task extends Model
         'assigned_to',
         'created_by',
     ];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'due_date' => 'date',
+        ];
+    }
 
     // Relationship: A task belongs to one assigned user
     public function assignedTo(): BelongsTo
@@ -36,6 +51,6 @@ class Task extends Model
     // Relationship: A task can have many history logs
     public function histories(): HasMany
     {
-        return $table->hasMany(TaskHistory::class);
+        return $this->hasMany(TaskHistory::class);
     }
 }

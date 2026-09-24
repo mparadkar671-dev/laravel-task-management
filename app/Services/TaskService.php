@@ -2,48 +2,68 @@
 
 namespace App\Services;
 
+use App\Models\Task;
 use App\Repositories\TaskRepository;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
 
 class TaskService
 {
-    protected $taskRepository;
+    public function __construct(
+        protected TaskRepository $taskRepository
+    ) {}
 
-    public function __construct(TaskRepository $taskRepository)
+    public function createTask(array $data): Task
     {
-        $this->taskRepository = $taskRepository;
-    }
-
-    public function createTask(array $data)
-    {
-        // Logic: Automatically set the 'created_by' to the logged-in user
+        // Automatically set the 'created_by' to the authenticated user
         $data['created_by'] = Auth::id();
-        
+
         return $this->taskRepository->create($data);
     }
 
-    public function getTasks()
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function getTasks(array $filters = []): LengthAwarePaginator
     {
         $user = Auth::user();
-        $role = $user->getRoleNames()->first(); // Get the user's role
+        $role = $user ? $user->getRoleNames()->first() : null;
 
-        return $this->taskRepository->getAllForUser($user->id, $role);
-    }
-    public function findById($id)
-    {
-        return $this->taskRepository->findById($id);
+        return $this->taskRepository->getTasksForUser($user->id, $role, $filters);
     }
 
-    public function updateTask($id, array $data)
+    public function findById(int|string $id, array $with = ['assignedTo', 'creator']): Task
     {
-        $task = $this->taskRepository->findById($id);
-        $task->update($data);
-        return $task;
+        return $this->taskRepository->findById($id, $with);
     }
 
-    public function deleteTask($id)
+    public function updateTask(Task|int|string $task, array $data): Task
     {
-        $task = $this->taskRepository->findById($id);
-        return $task->delete();
+        if (! ($task instanceof Task)) {
+            $task = $this->taskRepository->findById($task);
+        }
+
+        return $this->taskRepository->update($task, $data);
+    }
+
+    public function deleteTask(Task|int|string $task): bool
+    {
+        if (! ($task instanceof Task)) {
+            $task = $this->taskRepository->findById($task);
+        }
+
+        return $this->taskRepository->delete($task);
+    }
+
+    public function getTaskHistories(Task|int|string $task): Collection
+    {
+        if (! ($task instanceof Task)) {
+            $task = $this->taskRepository->findById($task, ['histories.user']);
+        } else {
+            $task->loadMissing('histories.user');
+        }
+
+        return $task->histories()->with('user')->orderBy('changed_at', 'desc')->orderBy('id', 'desc')->get();
     }
 }

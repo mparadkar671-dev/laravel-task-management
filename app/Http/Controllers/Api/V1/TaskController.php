@@ -5,46 +5,82 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Http\Resources\TaskHistoryResource;
 use App\Http\Resources\TaskResource;
 use App\Services\TaskService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 
 class TaskController extends Controller
 {
-    protected $taskService;
+    public function __construct(
+        protected TaskService $taskService
+    ) {}
 
-    public function __construct(TaskService $taskService)
+    public function index(Request $request): AnonymousResourceCollection
     {
-        $this->taskService = $taskService;
-    }
+        $filters = $request->only([
+            'status',
+            'priority',
+            'due_date',
+            'assigned_to',
+            'search',
+            'sort_by',
+            'sort_order',
+            'per_page',
+        ]);
 
-    public function index()
-    {
-        $tasks = $this->taskService->getTasks();
+        $tasks = $this->taskService->getTasks($filters);
+
         return TaskResource::collection($tasks);
     }
 
-    public function store(StoreTaskRequest $request)
+    public function store(StoreTaskRequest $request): JsonResponse
     {
         $task = $this->taskService->createTask($request->validated());
+
+        return (new TaskResource($task))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    public function show(int|string $id): TaskResource
+    {
+        $task = $this->taskService->findById($id, ['assignedTo', 'creator', 'histories.user']);
+        Gate::authorize('view', $task);
+
         return new TaskResource($task);
     }
 
-    public function show($id)
+    public function update(UpdateTaskRequest $request, int|string $id): TaskResource
     {
         $task = $this->taskService->findById($id);
-        return new TaskResource($task);
+        Gate::authorize('update', $task);
+
+        $updatedTask = $this->taskService->updateTask($task, $request->validated());
+
+        return new TaskResource($updatedTask);
     }
 
-    public function update(UpdateTaskRequest $request, $id)
+    public function destroy(int|string $id): JsonResponse
     {
-        $task = $this->taskService->updateTask($id, $request->validated());
-        return new TaskResource($task);
-    }
+        $task = $this->taskService->findById($id);
+        Gate::authorize('delete', $task);
 
-    public function destroy($id)
-    {
-        $this->taskService->deleteTask($id);
+        $this->taskService->deleteTask($task);
+
         return response()->json(['message' => 'Task deleted successfully'], 200);
+    }
+
+    public function history(int|string $id): AnonymousResourceCollection
+    {
+        $task = $this->taskService->findById($id);
+        Gate::authorize('view', $task);
+
+        $histories = $this->taskService->getTaskHistories($task);
+
+        return TaskHistoryResource::collection($histories);
     }
 }

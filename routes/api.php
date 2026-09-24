@@ -1,9 +1,9 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\AuthController;
-use App\Http\Controllers\Api\V1\TaskController; // <--- THIS WAS MISSING
+use App\Http\Controllers\Api\V1\TaskController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route; // <--- THIS WAS MISSING
 
 /*
 |--------------------------------------------------------------------------
@@ -18,14 +18,20 @@ Route::prefix('v1')->group(function () {
 
     // Protected Routes (Require a valid Sanctum Token)
     Route::middleware('auth:sanctum')->group(function () {
-        
+
+        // Task History Route (Must precede apiResource to ensure proper routing)
+        Route::get('/tasks/{task}/history', [TaskController::class, 'history']);
+
         // Task CRUD Routes
         Route::apiResource('tasks', TaskController::class);
-        
-        // Test route to check if the token works
+
+        // Authenticated user profile
         Route::get('/user', function (Request $request) {
             return $request->user();
         });
+
+        // Logout
+        Route::post('/logout', [AuthController::class, 'logout']);
     });
 
 });
