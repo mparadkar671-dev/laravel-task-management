@@ -41,8 +41,8 @@ class MultiPageAppFeatureTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Primary Administrator',
             'email' => 'admin@company.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'SecureAdminPass123!',
+            'password_confirmation' => 'SecureAdminPass123!',
         ]);
 
         $response->assertRedirect('/admin/dashboard');
@@ -63,8 +63,8 @@ class MultiPageAppFeatureTest extends TestCase
         $response = $this->post('/register', [
             'name' => 'Regular Employee',
             'email' => 'employee@company.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
+            'password' => 'SecureEmployeePass123!',
+            'password_confirmation' => 'SecureEmployeePass123!',
         ]);
 
         $response->assertRedirect('/employee/dashboard');
@@ -74,6 +74,41 @@ class MultiPageAppFeatureTest extends TestCase
         $this->assertTrue($user->hasRole('employee'));
         $this->assertFalse($user->hasRole('admin'));
         $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_registration_requires_secure_password_rules(): void
+    {
+        // Too short (< 8 chars)
+        $this->post('/register', [
+            'name' => 'Test User',
+            'email' => 'test1@company.com',
+            'password' => 'Pass1!',
+            'password_confirmation' => 'Pass1!',
+        ])->assertSessionHasErrors(['password']);
+
+        // Missing uppercase
+        $this->post('/register', [
+            'name' => 'Test User',
+            'email' => 'test2@company.com',
+            'password' => 'password123!',
+            'password_confirmation' => 'password123!',
+        ])->assertSessionHasErrors(['password']);
+
+        // Missing symbol
+        $this->post('/register', [
+            'name' => 'Test User',
+            'email' => 'test3@company.com',
+            'password' => 'Password123',
+            'password_confirmation' => 'Password123',
+        ])->assertSessionHasErrors(['password']);
+
+        // Confirmation mismatch
+        $this->post('/register', [
+            'name' => 'Test User',
+            'email' => 'test4@company.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Mismatch123!',
+        ])->assertSessionHasErrors(['password']);
     }
 
     public function test_admin_can_login_and_redirects_to_admin_dashboard(): void
@@ -135,7 +170,7 @@ class MultiPageAppFeatureTest extends TestCase
         $response = $this->actingAs($admin)->post('/admin/users', [
             'name' => 'Department Manager',
             'email' => 'dept.manager@example.com',
-            'password' => 'password123',
+            'password' => 'SecureManagerPass123!',
             'role' => 'manager',
         ]);
 
@@ -258,5 +293,28 @@ class MultiPageAppFeatureTest extends TestCase
 
         $response->assertRedirect('/login');
         $this->assertGuest();
+    }
+
+    public function test_web_login_is_rate_limited_after_excessive_failed_attempts(): void
+    {
+        $email = 'bruteforce@company.com';
+
+        // 5 failed login attempts
+        for ($i = 0; $i < 5; $i++) {
+            $this->post('/login', [
+                'email' => $email,
+                'password' => 'WrongPass123!',
+            ])->assertSessionHasErrors(['email']);
+        }
+
+        // 6th attempt is throttled
+        $response = $this->post('/login', [
+            'email' => $email,
+            'password' => 'WrongPass123!',
+        ]);
+
+        $response->assertSessionHasErrors(['email']);
+        $error = session('errors')->first('email');
+        $this->assertStringContainsString('Too many login attempts', $error);
     }
 }

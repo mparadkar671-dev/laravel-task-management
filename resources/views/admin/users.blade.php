@@ -143,7 +143,22 @@
 
                     <div class="form-group">
                         <label class="form-label" for="member-password">Initial Password *</label>
-                        <input type="password" id="member-password" name="password" class="form-control" required placeholder="Min. 8 characters">
+                        <div class="input-password-wrap">
+                            <input type="password" id="member-password" name="password" class="form-control" required placeholder="Min. 8 characters with letters, numbers & symbols">
+                            <button type="button" class="btn-eye-toggle" onclick="togglePassword('member-password', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
+                                <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                                <svg class="eye-closed" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        <small style="color: var(--text-dim); font-size: 0.75rem; display: block; margin-top: 0.35rem;">
+                            Security rule: Minimum 8 characters including uppercase, lowercase, numbers, and symbols.
+                        </small>
                     </div>
                 </div>
                 <div class="modal-footer">

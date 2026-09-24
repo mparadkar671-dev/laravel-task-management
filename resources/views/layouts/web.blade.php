@@ -449,6 +449,37 @@
             border-color: var(--primary);
         }
 
+        .input-password-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .input-password-wrap .form-control {
+            padding-right: 2.75rem;
+        }
+
+        .btn-eye-toggle {
+            position: absolute;
+            right: 0.75rem;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-sm);
+            transition: color 0.15s ease, background-color 0.15s ease;
+        }
+
+        .btn-eye-toggle:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -642,6 +673,23 @@
         }
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
+        }
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const eyeOpen = btn.querySelector('.eye-open');
+            const eyeClosed = btn.querySelector('.eye-closed');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                if (eyeOpen) eyeOpen.style.display = 'none';
+                if (eyeClosed) eyeClosed.style.display = 'block';
+                btn.setAttribute('aria-label', 'Hide password');
+            } else {
+                input.type = 'password';
+                if (eyeOpen) eyeOpen.style.display = 'block';
+                if (eyeClosed) eyeClosed.style.display = 'none';
+                btn.setAttribute('aria-label', 'Show password');
+            }
         }
     </script>
     @stack('scripts')
