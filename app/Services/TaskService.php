@@ -7,6 +7,7 @@ use App\Repositories\TaskRepository;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Auth;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class TaskService
 {
@@ -76,5 +77,72 @@ class TaskService
         $role = $user ? $user->getRoleNames()->first() : null;
 
         return $this->taskRepository->getStatisticsForUser($user->id, $role);
+    }
+
+    /**
+     * Export tasks as a streaming CSV download.
+     *
+     * @param  array<string, mixed>  $filters
+     */
+    public function exportTasksCsv(array $filters = []): StreamedResponse
+    {
+        $user = Auth::user();
+        $role = $user ? $user->getRoleNames()->first() : null;
+
+        $fileName = 'task_report_'.now()->format('Y_m_d_His').'.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$fileName}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $query = $this->taskRepository->getTasksQueryForUser($user->id, $role, $filters);
+
+        $callback = function () use ($query) {
+            $file = fopen('php://output', 'w');
+            // Write UTF-8 BOM for Microsoft Excel compatibility
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Write CSV column headers
+            fputcsv($file, [
+                'ID',
+                'Title',
+                'Description',
+                'Priority',
+                'Status',
+                'Assignee Name',
+                'Assignee Email',
+                'Created By',
+                'Due Date',
+                'Created At',
+                'Updated At',
+            ]);
+
+            // Stream rows in chunks of 200 to prevent memory exhaustion
+            $query->chunk(200, function ($tasks) use ($file) {
+                foreach ($tasks as $task) {
+                    fputcsv($file, [
+                        $task->id,
+                        $task->title,
+                        $task->description ?? '',
+                        strtoupper($task->priority),
+                        strtoupper($task->status),
+                        $task->assignedTo?->name ?? 'Unassigned',
+                        $task->assignedTo?->email ?? '',
+                        $task->creator?->name ?? 'System',
+                        $task->due_date ? $task->due_date->format('Y-m-d') : '',
+                        $task->created_at->format('Y-m-d H:i:s'),
+                        $task->updated_at->format('Y-m-d H:i:s'),
+                    ]);
+                }
+            });
+
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
     }
 }

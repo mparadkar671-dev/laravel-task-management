@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\TaskController;
+use App\Http\Controllers\Web\TaskCommentController;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,10 @@ Route::prefix('v1')->group(function () {
 
         // Task History Route (Must precede apiResource to ensure proper routing)
         Route::get('/tasks/{task}/history', [TaskController::class, 'history']);
+
+        // Task Comments / Discussion Routes
+        Route::get('/tasks/{task}/comments', [TaskCommentController::class, 'index']);
+        Route::post('/tasks/{task}/comments', [TaskCommentController::class, 'store']);
 
         // Task CRUD Routes
         Route::apiResource('tasks', TaskController::class);

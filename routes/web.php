@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\EmployeeController;
 use App\Http\Controllers\Web\ManagerController;
 use App\Http\Controllers\Web\ProfileController;
+use App\Http\Controllers\Web\TaskCommentController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -53,12 +54,17 @@ Route::middleware('auth')->group(function () {
     Route::post('/notifications/mark-all-read', [ProfileController::class, 'markAllNotificationsAsRead'])->name('notifications.markAllRead');
     Route::post('/notifications/{id}/mark-read', [ProfileController::class, 'markNotificationAsRead'])->name('notifications.markRead');
 
+    // Task Collaboration & Discussion (Comments)
+    Route::get('/tasks/{task}/comments', [TaskCommentController::class, 'index'])->name('tasks.comments.index');
+    Route::post('/tasks/{task}/comments', [TaskCommentController::class, 'store'])->name('tasks.comments.store');
+
     // -------------------------------------------------------------
     // 1. Admin Interface & Rights (Full Governance & Oversight)
     // -------------------------------------------------------------
     Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
         Route::get('/tasks', [AdminController::class, 'tasks'])->name('tasks');
+        Route::get('/tasks/export', [AdminController::class, 'export'])->name('tasks.export');
         Route::post('/tasks', [AdminController::class, 'storeTask'])->name('tasks.store');
         Route::put('/tasks/{task}', [AdminController::class, 'updateTask'])->name('tasks.update');
         Route::delete('/tasks/{task}', [AdminController::class, 'deleteTask'])->name('tasks.destroy');
@@ -74,6 +80,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('role:manager')->prefix('manager')->name('manager.')->group(function () {
         Route::get('/dashboard', [ManagerController::class, 'dashboard'])->name('dashboard');
         Route::get('/tasks', [ManagerController::class, 'tasks'])->name('tasks');
+        Route::get('/tasks/export', [ManagerController::class, 'export'])->name('tasks.export');
         Route::post('/tasks', [ManagerController::class, 'storeTask'])->name('tasks.store');
         Route::put('/tasks/{task}', [ManagerController::class, 'updateTask'])->name('tasks.update');
         Route::delete('/tasks/{task}', [ManagerController::class, 'deleteTask'])->name('tasks.destroy');

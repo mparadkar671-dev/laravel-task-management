@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AdminController extends Controller
 {
@@ -54,7 +55,7 @@ class AdminController extends Controller
      */
     public function tasks(Request $request): View
     {
-        $query = Task::with(['assignedTo', 'creator']);
+        $query = Task::with(['assignedTo', 'creator'])->withCount('comments');
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -85,6 +86,14 @@ class AdminController extends Controller
         $users = User::with('roles')->get();
 
         return view('admin.tasks', compact('tasks', 'users'));
+    }
+
+    /**
+     * Export all/filtered tasks to CSV.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        return $this->taskService->exportTasksCsv($request->all());
     }
 
     /**

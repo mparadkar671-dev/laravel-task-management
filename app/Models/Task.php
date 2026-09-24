@@ -53,4 +53,10 @@ class Task extends Model
     {
         return $this->hasMany(TaskHistory::class);
     }
+
+    // Relationship: A task can have many discussion comments
+    public function comments(): HasMany
+    {
+        return $this->hasMany(TaskComment::class)->latest();
+    }
 }

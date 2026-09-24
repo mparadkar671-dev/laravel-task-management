@@ -4,6 +4,7 @@ namespace App\Repositories;
 
 use App\Models\Task;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 
 class TaskRepository
 {
@@ -18,9 +19,11 @@ class TaskRepository
     }
 
     /**
+     * Build the query for fetching tasks with filters and role-based scoping.
+     *
      * @param  array<string, mixed>  $filters
      */
-    public function getTasksForUser(int|string $userId, ?string $role, array $filters = []): LengthAwarePaginator
+    public function getTasksQueryForUser(int|string $userId, ?string $role, array $filters = []): Builder
     {
         $query = Task::with(['assignedTo', 'creator']);
 
@@ -62,6 +65,15 @@ class TaskRepository
         $sortOrder = strtolower($filters['sort_order'] ?? 'desc') === 'asc' ? 'asc' : 'desc';
         $query->orderBy($sortBy, $sortOrder);
 
+        return $query;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    public function getTasksForUser(int|string $userId, ?string $role, array $filters = []): LengthAwarePaginator
+    {
+        $query = $this->getTasksQueryForUser($userId, $role, $filters);
         $perPage = isset($filters['per_page']) ? (int) $filters['per_page'] : 15;
 
         return $query->paginate($perPage);

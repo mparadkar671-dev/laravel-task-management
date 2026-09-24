@@ -25,7 +25,7 @@ class EmployeeController extends Controller
         $stats = $this->taskService->getStatistics();
 
         // Query only tasks assigned to this employee
-        $query = Task::with('creator')->where('assigned_to', $user->id);
+        $query = Task::with('creator')->withCount('comments')->where('assigned_to', $user->id);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

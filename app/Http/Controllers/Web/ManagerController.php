@@ -9,6 +9,7 @@ use App\Services\TaskService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ManagerController extends Controller
 {
@@ -47,7 +48,7 @@ class ManagerController extends Controller
      */
     public function tasks(Request $request): View
     {
-        $query = Task::with(['assignedTo', 'creator']);
+        $query = Task::with(['assignedTo', 'creator'])->withCount('comments');
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -78,6 +79,14 @@ class ManagerController extends Controller
         $employees = User::role('employee')->get();
 
         return view('manager.tasks', compact('tasks', 'employees'));
+    }
+
+    /**
+     * Export department tasks to CSV.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        return $this->taskService->exportTasksCsv($request->all());
     }
 
     /**

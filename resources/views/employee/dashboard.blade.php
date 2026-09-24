@@ -96,6 +96,7 @@
                         <th>Current Status</th>
                         <th>Advance Status</th>
                         <th>Due Date</th>
+                        <th>Team Notes</th>
                         <th>Created By</th>
                     </tr>
                 </thead>
@@ -129,6 +130,11 @@
                                 @endif
                             </td>
                             <td>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="openTaskCommentsModal({{ $task->id }}, '{{ addslashes($task->title) }}')" title="Discussion & Notes">
+                                    <span>💬 <span id="task-comment-count-{{ $task->id }}">{{ $task->comments_count ?? 0 }}</span></span>
+                                </button>
+                            </td>
+                            <td>
                                 <span style="font-size: 0.85rem; color: var(--text-muted);">
                                     {{ $task->creator?->name ?? 'Management' }}
                                 </span>
@@ -136,7 +142,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+                            <td colspan="7" style="text-align: center; color: var(--text-dim); padding: 3rem;">
                                 🎉 You currently have no tasks assigned in this view.
                             </td>
                         </tr>
@@ -149,4 +155,7 @@
             {{ $tasks->links() }}
         </div>
     </div>
+
+    <!-- Task Collaboration & Comments Modal -->
+    @include('partials.task-comments-modal')
 @endsection

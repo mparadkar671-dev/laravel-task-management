@@ -746,6 +746,11 @@
             gap: 0.75rem;
             background: rgba(0, 0, 0, 0.15);
         }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>

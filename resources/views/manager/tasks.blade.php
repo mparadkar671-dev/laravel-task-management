@@ -4,6 +4,9 @@
 @section('page-title', 'Department Task Board')
 
 @section('top-actions')
+    <a href="{{ route('manager.tasks.export', request()->query()) }}" class="btn btn-secondary" title="Export department tasks to CSV">
+        <span>📊 Export CSV</span>
+    </a>
     <button class="btn btn-primary" onclick="openModal('create-task-modal')">
         <span>+ Delegate Task</span>
     </button>
@@ -86,7 +89,10 @@
                                 @endif
                             </td>
                             <td>
-                                <div style="display: flex; gap: 0.4rem;">
+                                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="openTaskCommentsModal({{ $task->id }}, '{{ addslashes($task->title) }}')" title="Discussion & Notes">
+                                        <span>💬 <span id="task-comment-count-{{ $task->id }}">{{ $task->comments_count ?? 0 }}</span></span>
+                                    </button>
                                     <button class="btn btn-secondary btn-sm" onclick="openEditTaskModal({{ json_encode($task) }})">
                                         ✏️ Edit
                                     </button>
@@ -242,6 +248,9 @@
             </form>
         </div>
     </div>
+
+    <!-- Task Collaboration & Comments Modal -->
+    @include('partials.task-comments-modal')
 @endsection
 
 @push('scripts')
