@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class TaskHistory extends Model
 {
     // Since we don't need 'updated_at' for history logs, we can disable it
-    public $timestamps = false; 
+    public $timestamps = false;
 
     protected $fillable = [
         'task_id',

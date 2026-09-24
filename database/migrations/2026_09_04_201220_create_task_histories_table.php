@@ -10,16 +10,16 @@ return new class extends Migration
      * Run the migrations.
      */
     public function up(): void
-{
-    Schema::create('task_histories', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('task_id')->constrained('tasks')->onDelete('cascade');
-        $table->foreignId('changed_by')->constrained('users')->onDelete('cascade');
-        $table->string('old_status');
-        $table->string('new_status');
-        $table->timestamp('changed_at')->useCurrent();
-    });
-}
+    {
+        Schema::create('task_histories', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('task_id')->constrained('tasks')->onDelete('cascade');
+            $table->foreignId('changed_by')->constrained('users')->onDelete('cascade');
+            $table->string('old_status');
+            $table->string('new_status');
+            $table->timestamp('changed_at')->useCurrent();
+        });
+    }
 
     /**
      * Reverse the migrations.
