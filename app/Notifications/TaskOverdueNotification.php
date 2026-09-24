@@ -23,7 +23,7 @@ class TaskOverdueNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -53,9 +53,11 @@ class TaskOverdueNotification extends Notification implements ShouldQueue
         return [
             'task_id' => $this->task->id,
             'title' => $this->task->title,
+            'message' => "URGENT: Task \"{$this->task->title}\" is past due date!",
             'due_date' => $this->task->due_date?->format('Y-m-d'),
             'priority' => $this->task->priority,
             'status' => $this->task->status,
+            'type' => 'task_overdue',
         ];
     }
 }

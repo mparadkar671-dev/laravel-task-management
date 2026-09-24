@@ -26,7 +26,7 @@ class TaskStatusUpdatedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -52,12 +52,16 @@ class TaskStatusUpdatedNotification extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        $actor = $this->changedByName ?? 'A user';
+
         return [
             'task_id' => $this->task->id,
             'title' => $this->task->title,
-            'old_status' => $this->old_status ?? $this->oldStatus,
-            'new_status' => $this->new_status ?? $this->newStatus,
+            'message' => "Task \"{$this->task->title}\" status updated to {$this->newStatus} by {$actor}",
+            'old_status' => $this->oldStatus,
+            'new_status' => $this->newStatus,
             'changed_by' => $this->changedByName,
+            'type' => 'status_updated',
         ];
     }
 }

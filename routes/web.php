@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\AdminController;
 use App\Http\Controllers\Web\AuthController;
 use App\Http\Controllers\Web\EmployeeController;
 use App\Http\Controllers\Web\ManagerController;
+use App\Http\Controllers\Web\ProfileController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -42,6 +43,15 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', function () {
         return (new AuthController)->redirectBasedOnRole(Auth::user());
     })->name('dashboard');
+
+    // User Profile & Account Settings
+    Route::get('/profile', [ProfileController::class, 'show'])->name('profile');
+    Route::put('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+
+    // In-App Notification Actions
+    Route::post('/notifications/mark-all-read', [ProfileController::class, 'markAllNotificationsAsRead'])->name('notifications.markAllRead');
+    Route::post('/notifications/{id}/mark-read', [ProfileController::class, 'markNotificationAsRead'])->name('notifications.markRead');
 
     // -------------------------------------------------------------
     // 1. Admin Interface & Rights (Full Governance & Oversight)

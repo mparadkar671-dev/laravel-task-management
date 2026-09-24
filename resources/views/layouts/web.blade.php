@@ -354,7 +354,103 @@
         .top-actions {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.85rem;
+        }
+
+        /* In-App Notifications Dropdown */
+        .notification-btn-wrap {
+            position: relative;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            width: 38px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .notification-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--border-hover);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ef4444;
+            color: #ffffff;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 0.15rem 0.4rem;
+            border-radius: 999px;
+            line-height: 1;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+        }
+
+        .notification-dropdown {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: 46px;
+            width: 340px;
+            background: rgba(17, 24, 39, 0.98);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            overflow: hidden;
+        }
+
+        .notification-dropdown.active {
+            display: block;
+        }
+
+        .notif-header {
+            padding: 0.85rem 1.1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.825rem;
+            font-weight: 700;
+        }
+
+        .notif-body {
+            max-height: 320px;
+            overflow-y: auto;
+        }
+
+        .notif-item {
+            padding: 0.85rem 1.1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.825rem;
+            transition: background 0.15s ease;
+        }
+
+        .notif-item:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .notif-item.unread {
+            background: rgba(99, 102, 241, 0.08);
+        }
+
+        .notif-footer {
+            padding: 0.75rem 1.1rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.2);
         }
 
         .main-body {
@@ -714,7 +810,13 @@
                 </li>
             @endif
 
-            <div class="nav-section-title">API & Resources</div>
+            <div class="nav-section-title">Account & API</div>
+            <li class="nav-item {{ request()->routeIs('profile') ? 'active' : '' }}">
+                <a href="{{ route('profile') }}">
+                    <span>👤</span>
+                    <span>My Profile & Security</span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a href="{{ route('docs') }}" target="_blank">
                     <span>📖</span>
@@ -766,6 +868,62 @@
                 <h1 class="page-header-title">@yield('page-title', 'Dashboard')</h1>
             </div>
             <div class="top-actions">
+                @php
+                    $unreadCount = $user ? $user->unreadNotifications->count() : 0;
+                    $recentNotifs = $user ? $user->notifications()->take(5)->get() : collect();
+                @endphp
+
+                <!-- In-App Notification Bell -->
+                <div class="notification-btn-wrap" id="notification-wrapper">
+                    <button type="button" class="notification-btn" onclick="toggleNotificationDropdown()" aria-label="Notifications" title="Notifications">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        @if($unreadCount > 0)
+                            <span class="notification-badge">{{ $unreadCount }}</span>
+                        @endif
+                    </button>
+
+                    <!-- Dropdown -->
+                    <div class="notification-dropdown" id="notification-dropdown">
+                        <div class="notif-header">
+                            <span>Notifications ({{ $unreadCount }} unread)</span>
+                            @if($unreadCount > 0)
+                                <form action="{{ route('notifications.markAllRead') }}" method="POST" style="margin: 0;">
+                                    @csrf
+                                    <button type="submit" style="background: none; border: none; color: #818cf8; cursor: pointer; font-size: 0.75rem; font-weight: 600;">
+                                        Mark all read
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+
+                        <div class="notif-body">
+                            @forelse($recentNotifs as $notif)
+                                <div class="notif-item {{ $notif->read_at ? '' : 'unread' }}">
+                                    <div style="font-weight: {{ $notif->read_at ? '400' : '700' }}; color: {{ $notif->read_at ? 'var(--text-muted)' : 'var(--text-main)' }};">
+                                        {{ $notif->data['message'] ?? $notif->data['title'] ?? 'Task Alert' }}
+                                    </div>
+                                    <div style="font-size: 0.72rem; color: var(--text-dim); margin-top: 0.25rem;">
+                                        {{ $notif->created_at->diffForHumans() }}
+                                    </div>
+                                </div>
+                            @empty
+                                <div style="padding: 1.5rem 1rem; text-align: center; color: var(--text-dim); font-size: 0.8rem;">
+                                    No notifications right now
+                                </div>
+                            @endforelse
+                        </div>
+
+                        <div class="notif-footer">
+                            <a href="{{ route('profile') }}" style="color: #818cf8; text-decoration: none; font-weight: 600;">
+                                View All Notifications & Security ➔
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 @yield('top-actions')
             </div>
         </header>
@@ -823,6 +981,10 @@
                 <span>My Tasks</span>
             </a>
         @endif
+        <a href="{{ route('profile') }}" class="mobile-nav-link {{ request()->routeIs('profile') ? 'active' : '' }}">
+            <span class="nav-icon">👤</span>
+            <span>Profile</span>
+        </a>
         <button type="button" class="mobile-nav-link" onclick="toggleMobileSidebar()">
             <span class="nav-icon">☰</span>
             <span>Menu</span>
@@ -845,6 +1007,22 @@
                 overlay.classList.toggle('active');
             }
         }
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notification-dropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('active');
+            }
+        }
+
+        // Close notification dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            const wrapper = document.getElementById('notification-wrapper');
+            const dropdown = document.getElementById('notification-dropdown');
+            if (wrapper && dropdown && !wrapper.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
             const eyeOpen = btn.querySelector('.eye-open');

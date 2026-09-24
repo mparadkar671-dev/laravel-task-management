@@ -23,7 +23,7 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
      */
     public function via(object $notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     /**
@@ -50,8 +50,10 @@ class TaskAssignedNotification extends Notification implements ShouldQueue
         return [
             'task_id' => $this->task->id,
             'title' => $this->task->title,
+            'message' => "You were assigned task \"{$this->task->title}\"",
             'priority' => $this->task->priority,
             'due_date' => $this->task->due_date?->format('Y-m-d'),
+            'type' => 'task_assigned',
         ];
     }
 }
