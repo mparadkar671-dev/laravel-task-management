@@ -6,6 +6,15 @@
     <title>@yield('title', 'TaskFlow Platform') | Enterprise Task Governance</title>
     <meta name="description" content="Enterprise Multi-Page Task Management Platform with Role-Based Access Control.">
 
+    <!-- PWA & Mobile Optimization -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="TaskFlow">
+    <link rel="apple-touch-icon" href="/icons/icon.svg">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -69,9 +78,115 @@
             flex-shrink: 0;
         }
 
+        /* Mobile Overlay & Navigation Drawer */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 998;
+        }
+
+        .sidebar-overlay.active {
+            display: block;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            padding: 0.45rem 0.6rem;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .mobile-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: rgba(14, 19, 34, 0.95);
+            border-top: 1px solid var(--border);
+            backdrop-filter: blur(16px);
+            z-index: 990;
+            justify-content: space-around;
+            align-items: center;
+            padding: 0 0.5rem;
+        }
+
+        .mobile-nav-link {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.7rem;
+            font-weight: 600;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.4rem 0.6rem;
+            border-radius: var(--radius-sm);
+            transition: all 0.2s ease;
+        }
+
+        .mobile-nav-link.active,
+        .mobile-nav-link:hover {
+            color: #818cf8;
+        }
+
+        .mobile-nav-link .nav-icon {
+            font-size: 1.15rem;
+        }
+
         @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+                padding-bottom: 64px;
+            }
+
             .sidebar {
-                display: none;
+                position: fixed;
+                left: -300px;
+                top: 0;
+                bottom: 0;
+                width: 280px;
+                z-index: 999;
+                transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 10px 0 35px rgba(0, 0, 0, 0.8);
+            }
+
+            .sidebar.mobile-open {
+                left: 0;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .mobile-bottom-nav {
+                display: flex;
+            }
+
+            .top-navbar {
+                padding: 0.85rem 1rem;
+            }
+
+            .main-body {
+                padding: 1rem;
             }
         }
 
@@ -634,10 +749,22 @@
         </div>
     </aside>
 
+    <!-- Sidebar Overlay for Mobile -->
+    <div class="sidebar-overlay" id="sidebar-overlay" onclick="toggleMobileSidebar()"></div>
+
     <!-- Main Content Area -->
     <div class="content-wrapper">
         <header class="top-navbar">
-            <h1 class="page-header-title">@yield('page-title', 'Dashboard')</h1>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <button type="button" class="mobile-menu-btn" onclick="toggleMobileSidebar()" aria-label="Toggle navigation menu">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <h1 class="page-header-title">@yield('page-title', 'Dashboard')</h1>
+            </div>
             <div class="top-actions">
                 @yield('top-actions')
             </div>
@@ -666,6 +793,42 @@
         </main>
     </div>
 
+    <!-- Mobile Bottom Navigation Bar -->
+    <nav class="mobile-bottom-nav">
+        @if($roleName === 'admin')
+            <a href="{{ route('admin.dashboard') }}" class="mobile-nav-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ route('admin.tasks') }}" class="mobile-nav-link {{ request()->routeIs('admin.tasks') ? 'active' : '' }}">
+                <span class="nav-icon">📋</span>
+                <span>Tasks</span>
+            </a>
+            <a href="{{ route('admin.users') }}" class="mobile-nav-link {{ request()->routeIs('admin.users') ? 'active' : '' }}">
+                <span class="nav-icon">👥</span>
+                <span>Team</span>
+            </a>
+        @elseif($roleName === 'manager')
+            <a href="{{ route('manager.dashboard') }}" class="mobile-nav-link {{ request()->routeIs('manager.dashboard') ? 'active' : '' }}">
+                <span class="nav-icon">📊</span>
+                <span>Dashboard</span>
+            </a>
+            <a href="{{ route('manager.tasks') }}" class="mobile-nav-link {{ request()->routeIs('manager.tasks') ? 'active' : '' }}">
+                <span class="nav-icon">📋</span>
+                <span>Tasks</span>
+            </a>
+        @else
+            <a href="{{ route('employee.dashboard') }}" class="mobile-nav-link {{ request()->routeIs('employee.dashboard') ? 'active' : '' }}">
+                <span class="nav-icon">📌</span>
+                <span>My Tasks</span>
+            </a>
+        @endif
+        <button type="button" class="mobile-nav-link" onclick="toggleMobileSidebar()">
+            <span class="nav-icon">☰</span>
+            <span>Menu</span>
+        </button>
+    </nav>
+
     <!-- Scripts -->
     <script>
         function openModal(id) {
@@ -673,6 +836,14 @@
         }
         function closeModal(id) {
             document.getElementById(id).classList.remove('active');
+        }
+        function toggleMobileSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            if (sidebar && overlay) {
+                sidebar.classList.toggle('mobile-open');
+                overlay.classList.toggle('active');
+            }
         }
         function togglePassword(inputId, btn) {
             const input = document.getElementById(inputId);
