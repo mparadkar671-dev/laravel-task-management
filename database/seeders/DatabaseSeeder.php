@@ -105,5 +105,17 @@ class DatabaseSeeder extends Seeder
                 'created_by' => $admin->id,
             ]
         );
+
+        Task::firstOrCreate(
+            ['title' => 'Submit Monthly Compliance Audit'],
+            [
+                'description' => 'Review quarterly security policies and submit compliance checklist.',
+                'priority' => 'high',
+                'status' => 'pending',
+                'due_date' => now()->subDays(2)->format('Y-m-d'),
+                'assigned_to' => $employee1->id,
+                'created_by' => $manager->id,
+            ]
+        );
     }
 }
