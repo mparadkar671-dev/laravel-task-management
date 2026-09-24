@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\Route; // <--- THIS WAS MISSING
 Route::prefix('v1')->group(function () {
 
     // Public Routes
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
     // Protected Routes (Require a valid Sanctum Token)
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
 
         // Task History Route (Must precede apiResource to ensure proper routing)
         Route::get('/tasks/{task}/history', [TaskController::class, 'history']);
