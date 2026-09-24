@@ -94,4 +94,20 @@ class AuthFeatureTest extends TestCase
 
         $this->assertDatabaseCount('personal_access_tokens', 0);
     }
+
+    public function test_authenticated_user_can_list_users(): void
+    {
+        $user = User::factory()->create();
+        User::factory()->count(2)->create();
+
+        $response = $this->actingAs($user, 'sanctum')
+            ->getJson('/api/v1/users');
+
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => ['id', 'name', 'email', 'roles'],
+                ],
+            ]);
+    }
 }

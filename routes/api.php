@@ -2,8 +2,11 @@
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\TaskController;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route; // <--- THIS WAS MISSING
+use Illuminate\Support\Facades\Route;
+
+ // <--- THIS WAS MISSING
 
 /*
 |--------------------------------------------------------------------------
@@ -30,7 +33,14 @@ Route::prefix('v1')->group(function () {
 
         // Authenticated user profile
         Route::get('/user', function (Request $request) {
-            return $request->user();
+            return $request->user()->load('roles:id,name');
+        });
+
+        // Users list for task assignment
+        Route::get('/users', function () {
+            return response()->json([
+                'data' => User::with('roles:id,name')->get(['id', 'name', 'email']),
+            ]);
         });
 
         // Logout
