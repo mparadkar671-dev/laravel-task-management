@@ -1,27 +1,31 @@
-# Production Dockerfile for Laravel 13 on PHP 8.4 Alpine
-FROM php:8.4-cli-alpine
+# Production Dockerfile for Laravel 13 on PHP 8.4 (Debian Bookworm)
+FROM php:8.4-cli-bookworm
 
 WORKDIR /var/www/html
 
-# Install the official mlocati PHP extension installer (safely manages dependencies on Alpine)
+# Install the official mlocati PHP extension installer
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Install system utilities and Laravel PHP extensions
-RUN apk add --no-cache \
-        bash \
-        curl \
+# Install system dependencies including SQLite development libraries
+RUN apt-get update && apt-get install -y --no-install-recommends \
         git \
-        sqlite \
-        sqlite-libs \
+        curl \
+        zip \
+        unzip \
+        sqlite3 \
+        libsqlite3-dev \
+        pkg-config \
     && install-php-extensions \
         bcmath \
         pcntl \
         intl \
         zip \
-        pdo_sqlite
+        pdo_sqlite \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy application source code
 COPY . .
