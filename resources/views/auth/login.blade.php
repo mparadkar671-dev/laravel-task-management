@@ -254,7 +254,12 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label" for="password">Password</label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                    <label class="form-label" for="password" style="margin-bottom: 0;">Password</label>
+                    <a href="{{ route('password.request') }}" style="color: #818cf8; font-size: 0.8rem; text-decoration: none; font-weight: 600; transition: color 0.15s ease;" onmouseover="this.style.color='#a5b4fc'" onmouseout="this.style.color='#818cf8'">
+                        Forgot Password?
+                    </a>
+                </div>
                 <div class="input-password-wrap">
                     <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••" autocomplete="current-password">
                     <button type="button" class="btn-eye-toggle" onclick="togglePassword('password', this)" aria-label="Toggle password visibility" title="Show/Hide Password">
@@ -281,7 +286,12 @@
         </form>
 
         <div class="auth-footer">
-            Need an account? <a href="{{ route('register') }}">{{ !$adminExists ? 'Initialize Admin Account' : 'Register as Employee' }}</a>
+            <div style="margin-bottom: 0.6rem;">
+                Forgot your password? <a href="{{ route('password.request') }}">Reset via email</a>
+            </div>
+            <div>
+                Need an account? <a href="{{ route('register') }}">{{ !$adminExists ? 'Initialize Admin Account' : 'Register as Employee' }}</a>
+            </div>
         </div>
     </div>
 
