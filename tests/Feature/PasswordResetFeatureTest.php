@@ -198,4 +198,24 @@ class PasswordResetFeatureTest extends TestCase
 
         $this->assertTrue(Hash::check('ApiNewStrongPass123!', $user->fresh()->password));
     }
+
+    public function test_admin_can_send_password_reset_link_to_any_team_member(): void
+    {
+        Notification::fake();
+
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        $employee = User::factory()->create([
+            'email' => 'staff_member@company.com',
+        ]);
+        $employee->assignRole('employee');
+
+        $response = $this->actingAs($admin)->post("/admin/users/{$employee->id}/send-reset-link");
+
+        $response->assertRedirect()
+            ->assertSessionHas('status');
+
+        Notification::assertSentTo($employee, ResetPassword::class);
+    }
 }

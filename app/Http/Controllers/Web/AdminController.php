@@ -10,7 +10,8 @@ use App\Services\TaskService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Support\Facades\Password;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -172,7 +173,7 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', Password::defaults()],
+            'password' => ['required', 'string', PasswordRule::defaults()],
             'role' => ['required', 'in:manager,employee'],
         ]);
 
@@ -221,5 +222,19 @@ class AdminController extends Controller
         $user->delete();
 
         return back()->with('status', "User {$userName} was removed from the platform.");
+    }
+
+    /**
+     * Admin dispatches a password reset & verification email to a team member.
+     */
+    public function sendUserResetLink(User $user): RedirectResponse
+    {
+        $status = Password::sendResetLink(['email' => $user->email]);
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return back()->with('status', "Password reset link sent to {$user->name} ({$user->email}) successfully!");
+        }
+
+        return back()->withErrors(['email' => __($status)]);
     }
 }

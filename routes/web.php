@@ -78,6 +78,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/users', [AdminController::class, 'users'])->name('users');
         Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
         Route::post('/users/{user}/role', [AdminController::class, 'updateUserRole'])->name('users.updateRole');
+        Route::post('/users/{user}/send-reset-link', [AdminController::class, 'sendUserResetLink'])->name('users.sendResetLink');
         Route::delete('/users/{user}', [AdminController::class, 'deleteUser'])->name('users.destroy');
     });
 

@@ -93,15 +93,24 @@
                             </td>
 
                             <td>
-                                @if(!$isAdmin)
-                                    <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Permanently remove {{ $user->name }} from the platform?');" style="display: inline;">
+                                <div style="display: flex; gap: 0.4rem; align-items: center;">
+                                    <form action="{{ route('admin.users.sendResetLink', $user) }}" method="POST" style="display: inline;">
                                         @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger btn-sm" title="Delete User">🗑️ Delete</button>
+                                        <button type="submit" class="btn btn-secondary btn-sm" title="Send Password Reset Email" onclick="return confirm('Send a password reset & verification link to {{ $user->email }}?');">
+                                            ✉️ Reset Link
+                                        </button>
                                     </form>
-                                @else
-                                    <span style="color: var(--text-dim); font-size: 0.78rem;">Locked</span>
-                                @endif
+
+                                    @if(!$isAdmin)
+                                        <form action="{{ route('admin.users.destroy', $user) }}" method="POST" onsubmit="return confirm('Permanently remove {{ $user->name }} from the platform?');" style="display: inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-danger btn-sm" title="Delete User">🗑️ Delete</button>
+                                        </form>
+                                    @else
+                                        <span style="color: var(--text-dim); font-size: 0.78rem;">Locked</span>
+                                    @endif
+                                </div>
                             </td>
                         </tr>
                     @endforeach
